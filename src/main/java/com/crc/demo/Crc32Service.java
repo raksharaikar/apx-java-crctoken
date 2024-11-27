@@ -12,9 +12,10 @@ public class Crc32Service {
 
     private static final String FIRMWARE_DIRECTORY = "src/main/resources/firmware"; // Correct path to firmware directory
 
-    public int calculateCRC32(String filePath) throws IOException {
-        return getCRC32new(filePath);
+    public int calculateCRC32(byte[] fileBytes) {
+        return getCRC32new(fileBytes);
     }
+    
 
     // Calculate CRC32 checksum for the file
     public static int Crc32CalByByte(int oldcrc, byte[] ptr, int offset, int len) {
@@ -33,32 +34,26 @@ public class Crc32Service {
     }
 
     // Helper method to calculate CRC32 for a given file
-    public static int getCRC32new(String fp) throws IOException {
-        File file = new File(fp);
-        FileInputStream isfile = null;
-        try {
-            isfile = new FileInputStream(file);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        long leng = file.length();
-        int read_count = 0;
-        InputStream input = new BufferedInputStream(isfile);
-
-        byte[] inputBuffer = new byte[256];
+    public static int getCRC32new(byte[] fileBytes) {
         int crcInit = 0;
-        int couts = 0;
-        while (((read_count = input.read(inputBuffer, 0, 256)) != -1)) {
-            if (couts != 0) {
-                crcInit = Crc32CalByByte(crcInit, inputBuffer, 0, read_count);
+        int offset = 0;
+        int bufferSize = 256;
+    
+        // Process the bytes in chunks of 256
+        while (offset < fileBytes.length) {
+            int length = Math.min(bufferSize, fileBytes.length - offset);
+            byte[] buffer = new byte[length];
+            System.arraycopy(fileBytes, offset, buffer, 0, length);
+    
+            if (offset != 0) {
+                crcInit = Crc32CalByByte(crcInit, buffer, 0, length);
             } else {
                 // Optionally, log or process the first buffer read
             }
-
-            couts++;
+    
+            offset += length;
         }
-
+    
         return crcInit;
     }
 
